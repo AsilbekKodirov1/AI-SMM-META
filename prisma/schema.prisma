@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("USER") // USER, ADMIN
+  language     String    @default("uz")   // uz, ru
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profile             Profile?
+  instagramAccounts   InstagramAccount[]
+  scenarios           GeneratedScenario[]
+  calendarItems       ContentCalendarItem[]
+  subscription        Subscription?
+  activationCodes     ActivationCode[]
+  notifications       Notification[]
+  aiUsageLogs         AIUsageLog[]
+}
+
+model Profile {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                String?
+  avatarUrl          String?
+  phone              String?
+  telegramUsername   String?
+  telegramChatId     String?
+  isTelegramVerified Boolean   @default(false)
+  updatedAt          DateTime  @updatedAt
+}
+
+model InstagramAccount {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username       String
+  fullName       String?
+  profilePicUrl  String?
+  followersCount Int       @default(0)
+  followingCount Int       @default(0)
+  mediaCount     Int       @default(0)
+  biography      String?
+  externalUrl    String?
+  isVerified     Boolean   @default(false)
+  isConnected    Boolean   @default(true)
+  connectedAt    DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  snapshots      AccountMetricSnapshot[]
+  auditReports   AIAccountAudit[]
+}
+
+model AccountMetricSnapshot {
+  id                 String           @id @default(cuid())
+  instagramAccountId String
+  account            InstagramAccount @relation(fields: [instagramAccountId], references: [id], onDelete: Cascade)
+  followers          Int
+  following          Int
+  totalViews         Int
+  totalLikes         Int
+  totalComments      Int
+  engagementRate     Float
+  capturedAt         DateTime         @default(now())
+}
+
+model AIAccountAudit {
+  id                 String           @id @default(cuid())
+  instagramAccountId String
+  account            InstagramAccount @relation(fields: [instagramAccountId], references: [id], onDelete: Cascade)
+  niche              String
+  healthScore        Int              // 0 - 100
+  bestFormat         String           // Reels, Carousel, Story, etc.
+  bestTopic          String
+  growthRate         Float            // e.g. 18.4
+  bestPostingTime    String
+  strengthsJson      String           // Array of strings
+  weaknessesJson     String           // Array of strings
+  recommendationsJson String          // Array of strings
+  createdAt          DateTime         @default(now())
+}
+
+model GeneratedScenario {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  topic          String
+  niche          String
+  contentType    String    // Reel, Carousel, Story, Post
+  duration       String?   // 15s, 30s, 60s
+  targetAudience String?
+  hook           String
+  scenesJson     String    // [{sceneNumber, duration, visual, voiceover, camera, audio}]
+  scriptBody     String
+  caption        String
+  cta            String
+  hashtags       String?
+  estimatedViews String?
+  estimatedLikes String?
+  engagementRate String?
+  language       String    @default("uz") // uz, ru
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model ContentCalendarItem {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  contentType   String    // Reel, Story, Post, Carousel
+  scheduledDate DateTime
+  scheduledTime String?   // "18:00"
+  status        String    @default("DRAFT") // DRAFT, SCHEDULED, PUBLISHED
+  scenarioId    String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Plan {
+  id              String         @id @default(cuid())
+  code            String         @unique // FREE_TRIAL, PRO, MAX
+  name            String
+  priceMonth      Float
+  priceYear       Float
+  maxAccounts     Int
+  unlimitedAI     Boolean        @default(false)
+  featuresJson    String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  subscriptions   Subscription[]
+}
+
+model Subscription {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId          String
+  plan            Plan      @relation(fields: [planId], references: [id])
+  status          String    @default("TRIAL") // TRIAL, ACTIVE, EXPIRED, CANCELLED
+  trialEndsAt     DateTime?
+  currentPeriodEnd DateTime?
+  paymentMethod   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model ActivationCode {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String    @unique
+  isUsed    Boolean   @default(false)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  verifiedAt DateTime?
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String?
+  type      String    @default("INFO") // INFO, SUCCESS, ALERT, SYSTEM
+  isRead    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}
+
+model AIUsageLog {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feature   String    // SCENARIO_GEN, AUDIT, CAPTION_GEN, PREDICTION
+  tokensUsed Int      @default(0)
+  createdAt DateTime  @default(now())
+}

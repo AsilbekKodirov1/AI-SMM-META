@@ -1,0 +1,21 @@
+{
+  "name": "ai-smm-meta",
+  "version": "1.0.0",
+  "description": "Telegram Bot Service for AI SMM Assistant - Instant OTP verification and account activation",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^18.0.9",
+    "prisma": "^5.22.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
