@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
-    "postinstall": "prisma generate",
+    "postinstall": "node -e \"if(!process.env.DATABASE_URL) process.env.DATABASE_URL='file:./dev.db'; try{require('child_process').execSync('npx prisma generate',{stdio:'inherit'})}catch(e){}\"",
     "db:push": "prisma db push",
     "db:generate": "prisma generate"
   },
@@ -19,3 +19,4 @@
     "node": ">=18.0.0"
   }
 }
+

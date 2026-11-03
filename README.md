@@ -63,3 +63,4 @@ Ushbu botni **Render.com** (Background Worker) yoki **Railway.app** orqali 24/7 
 ---
 
 Ishlab chiquvchi: [Asilbek Kodirov](https://github.com/AsilbekKodirov1)
+
